@@ -3,12 +3,32 @@ local fontManager = require 'fontManager'
 local sceneManager = require 'gameSceneManager'
 local gameScene = require 'gameScene'
 
-local defaultFont = love.graphics.newFont(11)
-local bigFont = love.graphics.newFont(48)
+local hexmap = require 'hexmap'
 
-local oldHx, oldHy
+local defaultFont = love.graphics.newFont(11)
+local bigFont = love.graphics.newFont(24)
+
+local previousTile
 local white = { 255, 255, 255, 255 }
 local grey = { 80, 80, 80, 255 }
+
+local connectors = {
+	{ 
+		color = { 255, 0, 0, 255 }, 
+		x1 = 12, y1 = 29,
+		x2 = 22, y2 = 24,
+	},
+	{ 
+		color = { 0, 0, 255, 255 },
+		x1 = 11, y1 = 29,
+		x2 = 21, y2 = 24,
+	},
+	{ 
+		color = { 255, 0, 255, 255 },
+		x1 = 17, y1 = 20,
+		x2 = 18, y2 = 25,
+	}	
+}
 
 function drawHexagon(m, x, y, w, h)
 	local m = m or 'fill'
@@ -35,33 +55,34 @@ function drawHexagon(m, x, y, w, h)
 		x1, y2)
 end
 
-local tiles = {}
-for y = 1, 100 do
-	tiles[y] = {}
-	for x = 1, 100 do
-		tiles[y][x] = { filled = false }
-	end
-end
-
-for i = 1, 100 do	
-	local x = math.random(10,40)
-	local y = math.random(1,30)
-	local r = math.random(0,2)
-	local g = math.random(0,2)
-	local b = math.random(0,2)
-	
-	tiles[y][x].color = { r * 125, g * 125, b * 125, 255 }
-	tiles[y][x].filled = true
-end
-
 function love.load()
-	math.randomseed( os.time() )
-
-	local xoff = -500
+	math.randomseed(os.time())
+	
+	local tile 
+	
+	local map = hexmap:new(50,50)
+	
+	-- start with all tiles not filled
+	for tile in map:tiles() do
+		tile.filled = false
+	end
+	
+	-- set up the connectors
+	for _, c in ipairs(connectors) do
+		c.connected = false	
+		tile = map:tile(c.x1, c.y1)
+		tile.color = c.color
+		tile.filled = true
+		tile = map:tile(c.x2, c.y2)
+		tile.color = c.color
+		tile.filled = true		
+	end
+	
+	local xoff = -300
 	local yoff = -1000
-	local w = 80
+	local w = 50
 	local nw = w * 0.75
-	local h = 60
+	local h = 40
 	local drawingColor = nil
 			
 	local gs = gameScene:new()	
@@ -72,38 +93,95 @@ function love.load()
 						
 			local line_color
 			
-			for y = 1, 40 do
-				for x = 1, 40 do
+			for y = 5, 45 do
+				for x = 5, 45 do
 					local sx = (nw * x) + xoff
 					local sy = (h * (x * 0.5 + y)) + yoff
 
-					local tile = tiles[y][x]
+					local tile = map:tile(x,y)
 					if tile.hilighted then 
 						line_color = white
 					else
 						line_color = tile.color or grey				
 					end				
 					
-					if tile.filled then				
+					if tile.filled then
 						love.graphics.setColor(tile.color)
 						drawHexagon('fill', sx, sy, w - 2, h - 2 )
 					end
 						
 					love.graphics.setColor(line_color)
 					drawHexagon('line', sx, sy, w - 2, h - 2 )
-
+					
 					--[[
-					love.graphics.setColor(80,80,80,255)	
+					love.graphics.setColor(0, 255, 0, 255)
 					love.graphics.print(x .. ',' .. y, sx, sy)
-					love.graphics.setColor(0,255,0,255)
-					love.graphics.setFont(bigFont)	
-					love.graphics.print(mx .. ',' .. my, 0, 0)
-					love.graphics.print(hx .. ',' .. hy, 0, 50)
 					]]
 				end
 			end
+			
+			-- draw the status of the connectors
+			
+			love.graphics.setFont(bigFont)
+			local sx = 0
+			local sy = 0
+			for k, c in ipairs(connectors) do								
+				love.graphics.setColor(c.color)
+				if c.connected == 1 then
+					love.graphics.print('CONNECTED', sx, sy)
+				elseif c.connected == -1 then
+					love.graphics.print('BLOCKED!', sx, sy)
+				else
+					love.graphics.print('NOT CONNECTED', sx, sy)
+				end
+				
+				sy = sy + 30
+			end	
+								
+			--[[
+			love.graphics.print(mx .. ',' .. my, 0, 0)
+			love.graphics.print(hx .. ',' .. hy, 0, 50)
+			]]								
 		end,
-		update = function(self, dt)			
+		update = function(self, dt)		
+			-- check the connectors
+			for _, c in ipairs(connectors) do	
+				-- check if the connectors have been connected
+				if not c.connected then
+					local result = map:pathExists(c.x1, c.y1, c.x2, c.y2,
+						function(a, b)
+							return 	
+								a.color and b.color and
+								(a.color[1] == b.color[1]
+								and
+								a.color[2] == b.color[2]
+								and
+								a.color[3] == b.color[3])
+						end)
+					if result then
+						c.connected = 1
+					end
+				end
+				
+				-- check if it is even possible to still connect these connectors
+				if not c.connected then
+					local firstColor = map:tile(c.x1, c.y1).color
+					local result = map:pathExists(c.x1, c.y1, c.x2, c.y2,
+						function(a, b)
+							return 
+								not b.color or 
+								(b.color[1] == firstColor[1]
+								and
+								b.color[2] == firstColor[2]
+								and
+								b.color[3] == firstColor[3])
+						end)
+					if not result then
+						c.connected = -1
+					end
+				end				
+			end
+
 			local mx, my = love.mouse.getPosition()	
 			local hmx = mx - xoff - 10
 			local hmy = my - yoff + 0
@@ -111,26 +189,28 @@ function love.load()
 			local hx = math.floor(hmx / nw)
 			local hy = math.floor(hmy / h - hx * 0.5)
 			
-			if love.mouse.isDown('l') then						
-				if tiles[hy][hx].color then
-					drawingColor = tiles[hy][hx].color
+			local currentTile = map:tile(hx, hy)
+			
+			if currentTile then
+				if love.mouse.isDown('l') then						
+					if not drawingColor and currentTile.color then
+						drawingColor = currentTile.color
+					end
+				else
+					drawingColor = nil
 				end
-			else
-				drawingColor = nil
+				
+				if drawingColor and not currentTile.color then
+					currentTile.color = drawingColor
+					currentTile.filled = true
+				end
+				
+				if previousTile then
+					previousTile.hilighted = false
+				end	
+				currentTile.hilighted = true
+				previousTile = currentTile
 			end
-			
-			if drawingColor then
-				tiles[hy][hx].color = drawingColor
-				tiles[hy][hx].filled = true
-			end
-			
-			if oldHx and oldHy then
-				tiles[oldHy][oldHx].hilighted = false
-			end	
-			tiles[hy][hx].hilighted = true
-			
-			oldHx = hx
-			oldHy = hy
 		end
 	}	
 	
