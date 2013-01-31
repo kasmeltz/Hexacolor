@@ -4,8 +4,8 @@ hexmap.lua
 January 30th, 2013
 
 ]]
-local setmetatable, ipairs
-	= setmetatable, ipairs
+local setmetatable, ipairs, math
+	= setmetatable, ipairs, math
 		
 module(...)
 
@@ -38,7 +38,10 @@ function _M:initialize()
 	for y = 1, self._height do
 		self._tiles[y] = {}
 		for x = 1, self._width do
-			self._tiles[y][x] = { x = x, y = y }
+			self._tiles[y][x] = { 
+				x = x, 
+				y = y
+			}
 		end
 	end
 
@@ -93,6 +96,51 @@ function _M:tile(x, y)
 	if x < 1 or x > #self._tiles[y] then return nil end
 	return self._tiles[y][x]
 end
+
+--
+--  Returns the distance (in hexes) between two tiles
+--
+function _M:distance(tile1, tile2)
+	local x = tile1.x - tile2.x
+	local y = tile1.y - tile2.y	
+	return (math.abs(x) + math.abs(y) + math.abs(x+y)) / 2
+end
+
+--
+--  Enables all tiles a certain radius from the provided grid location
+--
+function _M:enableRadialTiles(x, y, size)
+	local ct = self:tile(x,y)
+	ct.disabled = false
+		
+	-- enable all tiles a certain distance from center tile
+	for tile in self:tiles() do
+		if self:distance(ct, tile) < size then
+			tile.disabled = false
+		end
+	end
+end
+
+--
+--  Enables tiles in a star pattern from the provided grid location
+--
+function _M:enableStarTiles(x, y, size)
+	local tile = self:tile(x,y)
+	tile.disabled = false
+	
+	for i = 1, #self._neighbourMap.y do
+		for k = 1, size do
+			local nx = self._neighbourMap.x[i] * k
+			local ny = self._neighbourMap.y[i] * k
+			local n = self:tile(x + nx, y + ny)
+			if n then 
+				n.disabled = false
+			end
+		end
+	end				
+end
+
+
 		
 --
 --  Tests if there is a path between the first and second tile
