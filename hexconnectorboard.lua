@@ -13,7 +13,7 @@ local setmetatable, ipairs, math
 module(...)
 
 --
---  Creates a hex connector game
+--  Creates a hex connector board
 --
 function _M:new(cx, cy, r)		
 	local o = { 
@@ -69,7 +69,7 @@ end
 --
 --  Checks the connectors
 --
-function _M:checkConnectors()
+function _M:checkConnectors(onConnect, onBlock)
 	for _, c in ipairs(self._connectors) do	
 		-- check if the connectors have been connected
 		if not c.connected then
@@ -86,6 +86,9 @@ function _M:checkConnectors()
 				end)
 			if result then
 				c.connected = 1
+				if onConnect then
+					onConnect(c)
+				end
 			end
 		end
 		
@@ -105,6 +108,9 @@ function _M:checkConnectors()
 				end)
 			if not result then
 				c.connected = -1
+				if onBlock then
+					onBlock(c)
+				end
 			end
 		end		
 	end

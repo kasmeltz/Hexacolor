@@ -14,6 +14,7 @@ module(...)
 
 local defaultFont = love.graphics.newFont(11)
 local bigFont = love.graphics.newFont(24)
+local hugeFont = love.graphics.newFont(100)
 
 --
 --  Creates a hex connector game component
@@ -26,7 +27,9 @@ function _M:new(board)
 		_hexWideWidth = 50,
 		_hexNarrowWidth = 50 * 0.75,
 		_hexHeight = 40,		
-		_drawingColor = nil
+		_drawingColor = nil,
+		_roundTime = 20,
+		_score = 0
 	}
 		
 	self.__index = self
@@ -58,15 +61,6 @@ function _M:drawHexagon(m, x, y)
 		x1, y2)
 end
 
---[[
-local xoff = -300
-local yoff = -1000
-local w = 50
-local nw = w * 0.75
-local h = 40
-local drawingColor = nil
-]]
-			
 --
 --  Draws the component
 --
@@ -106,22 +100,12 @@ function _M:draw()
 		end
 	end
 	
-	-- draw the status of the connectors			
-	love.graphics.setFont(bigFont)
-	local sx = 0
-	local sy = 0
-	for k, c in ipairs(self._board._connectors) do								
-		love.graphics.setColor(c.color)
-		if c.connected == 1 then
-			love.graphics.print('CONNECTED', sx, sy)
-		elseif c.connected == -1 then
-			love.graphics.print('BLOCKED!', sx, sy)
-		else
-			love.graphics.print('NOT CONNECTED', sx, sy)
-		end
-		
-		sy = sy + 30
-	end	
+	love.graphics.setFont(hugeFont)
+	love.graphics.setColor(0,255,0,255)
+	love.graphics.print(math.ceil(self._roundTime), 10, 10)
+	
+	love.graphics.setFont(bigFont)	
+	love.graphics.print('Score: ' .. self._score, 500, 10)
 						
 	--[[
 	love.graphics.print(mx .. ',' .. my, 0, 0)
@@ -130,9 +114,28 @@ function _M:draw()
 end
 
 --
+--  Does something for all of the tiles of one color
+--
+function _M:allTilesOfColor(c, fn)
+	for tile in self._board._map:tiles() do
+		if tile.color and 
+		(tile.color[1] == c[1] 
+		and tile.color[2] == c[2]
+		and tile.color[3] == c[3]) then		
+			fn(tile)
+		end
+	end
+end
+
+--
 --  Updates the component
 --
 function _M:update(dt)
+	self._roundTime = self._roundTime - dt
+	if self._roundTime <= 0 then
+		self._roundTime = 0
+	end
+
 	local mx, my = love.mouse.getPosition()	
 	local hmx = mx - self._xoffset - 10
 	local hmy = my - self._yoffset + 0
@@ -142,25 +145,48 @@ function _M:update(dt)
 	
 	local currentTile = self._board._map:tile(hx, hy)
 	
-	if currentTile and not currentTile.disabled then
+	if currentTile and not currentTile.disabled and not currentTile.locked then
 		if love.mouse.isDown('l') then						
-			if not drawingColor and currentTile.color then
-				drawingColor = currentTile.color
+			if not self._drawingColor and currentTile.color then
+				self._drawingColor = currentTile.color
 			end
 		else
-			drawingColor = nil
+			self._drawingColor = nil
 		end
-		
-		if drawingColor and not currentTile.color then
-			currentTile.color = drawingColor
-			currentTile.filled = true
-			self._board:checkConnectors()
-		end
-		
+					
 		if previousTile then
 			previousTile.hilighted = false
 		end	
 		currentTile.hilighted = true
-		previousTile = currentTile
+		previousTile = currentTile			
+				
+		if self._drawingColor and not currentTile.color then
+			currentTile.color = self._drawingColor
+			currentTile.filled = true
+			self._board:checkConnectors(
+				function(c)
+					self:allTilesOfColor(c.color, function(tile)
+						tile.locked = true
+						tile.color = { 50, 50, 50, 255 }				
+					end)
+
+					self._score = self._score + 50
+					self._drawingColor = nil
+
+					currentTile.hilighted = false
+					previousTile.hilighted = false
+					currentTile = nil
+					previousTile = nil
+				end, 
+				function(c)
+					self._score = -1000
+					
+					self:allTilesOfColor(c.color, function(tile)
+						tile.locked = true
+						tile.color = { tile.color[1], tile.color[2], tile.color[3], 64 }							
+					end)
+				end)
+		end
 	end	
+
 end
