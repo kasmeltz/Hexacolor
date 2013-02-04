@@ -41,7 +41,7 @@ function love.load()
 		
 	local gs = gameScene:new()	
 	gs._orderedDraw = true
-	gs._showCollisionBoxes = true
+	--gs._showCollisionBoxes = true
 	
 	local c = camera:new()
 	gameScene:camera(c)	
