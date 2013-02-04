@@ -172,6 +172,8 @@ ss:quads()
 ss:animations(body_animations)
 spriteSheetManager.sheet('male_body_light', ss)
 
+--[[
+
 -- the orc male green body sprite sheet
 local ss = spriteSheet:new(imageManager.load('images/sprites/body/male/orc.png'))
 ss:uniformFrames(64, 64)
@@ -236,4 +238,4 @@ ss:tiles{
 	{ _offset = { 16, 32 }, _height = 64, _boundary = { 16, 0, 34, 32 } }	
 }
 spriteSheetManager.sheet('tiles_dungeon_0', ss)
-
+]]

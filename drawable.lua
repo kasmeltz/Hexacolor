@@ -94,7 +94,7 @@ function Drawable:draw(camera, drawTable)
 		math.floor((self._position[1] * camera._zoomX) - camera._cwzx)
 	self._screenPos[2] = 
 		math.floor((self._position[2] * camera._zoomY) - camera._cwzy)
-	
+		
 	love.graphics
 		.drawq(
 			self._spriteSheet._image, 

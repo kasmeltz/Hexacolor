@@ -142,6 +142,8 @@ end
 --  Adds a component
 --
 function _M:addComponent(c)
+	c._scene = self
+	
 	if c.draw then
 		self._drawables[c] = c
 	end

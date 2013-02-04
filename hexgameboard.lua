@@ -41,7 +41,10 @@ function _M:reset()
 		tile.disabled = true
 	end
 	
-	m:enableRadialTiles(self._centerX, self._centerY, self._radius)
+	m:radialTiles(self._centerX, self._centerY, self._radius,
+		function(tile)
+			tile.disabled = false
+		end)
 		
 	self._map = m
 	self._games = {}

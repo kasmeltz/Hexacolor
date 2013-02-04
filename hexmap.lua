@@ -109,14 +109,13 @@ end
 --
 --  Enables all tiles a certain radius from the provided grid location
 --
-function _M:enableRadialTiles(x, y, size)
+function _M:radialTiles(x, y, size, fn)
 	local ct = self:tile(x,y)
-	ct.disabled = false
 		
 	-- enable all tiles a certain distance from center tile
 	for tile in self:tiles() do
 		if self:distance(ct, tile) < size then
-			tile.disabled = false
+			fn(tile)
 		end
 	end
 end
@@ -124,9 +123,8 @@ end
 --
 --  Enables tiles in a star pattern from the provided grid location
 --
-function _M:enableStarTiles(x, y, size)
+function _M:starTiles(x, y, size, fn)
 	local tile = self:tile(x,y)
-	tile.disabled = false
 	
 	for i = 1, #self._neighbourMap.y do
 		for k = 1, size do
@@ -134,7 +132,7 @@ function _M:enableStarTiles(x, y, size)
 			local ny = self._neighbourMap.y[i] * k
 			local n = self:tile(x + nx, y + ny)
 			if n then 
-				n.disabled = false
+				fn(n)
 			end
 		end
 	end				
