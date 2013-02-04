@@ -33,7 +33,7 @@ function _M:new(board)
 		_yoffset = 0,	
 		_maxMana = 200,
 		_mana = 200,
-		_manaRegenRate = 1,
+		_manaRegenRate = 3,
 		_drawingColor = nil,
 		_roundTime = 60,
 		_currentSpell = nil,
