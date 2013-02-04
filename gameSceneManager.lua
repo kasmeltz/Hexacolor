@@ -5,8 +5,6 @@ January 9th, 2013
 
 ]]
 
-local print = print
-
 module (...)
 
 local scenes = {}

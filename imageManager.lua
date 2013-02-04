@@ -10,12 +10,15 @@ module (...)
 
 local images = {}
 
-function Load(name, path)
-	if images[name] then 
-		return images[name] 
+--
+--  Returns the image specified by the path
+--	loading it as a new resource if it doesn't already exist
+--
+function load(path)
+	if images[path] then 
+		return images[path] 
 	end
 	
-	images[name] = love.graphics.newImage(path)
-	return images[name] 
+	images[path] = love.graphics.newImage(path)
+	return images[path] 
 end
-

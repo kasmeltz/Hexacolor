@@ -1,6 +1,6 @@
 --[[
 
-hexconnectorgamecomponent.lua
+hexgamecomponent.lua
 January 30th, 2013
 
 ]]
@@ -17,16 +17,13 @@ local bigFont = love.graphics.newFont(24)
 local hugeFont = love.graphics.newFont(100)
 
 --
---  Creates a hex connector game component
+--  Creates a hex game game component
 --
 function _M:new(board)		
 	local o = { 
-		_board = board,
-		_xoffset = -300,
-		_yoffset = -1000,
-		_hexWideWidth = 50,
-		_hexNarrowWidth = 50 * 0.75,
-		_hexHeight = 40,		
+		_board = board,		
+		_xoffset = 0,
+		_yoffset = 0,		
 		_drawingColor = nil,
 		_roundTime = 20,
 		_score = 0
@@ -62,6 +59,31 @@ function _M:drawHexagon(m, x, y)
 end
 
 --
+--  Sets the scale of the hexagons
+--
+function _M:hexagonScale(width, height)
+	self._hexWideWidth = width
+	self._hexHeight = height
+	self._hexNarrowWidth = self._hexWideWidth * 0.75
+	
+	for tile in self._board._map:tiles() do
+		local x = tile.tileX
+		local y = tile.tileY
+		tile.worldX = (self._hexNarrowWidth * x)
+		tile.worldY = (self._hexHeight * (x * 0.5 + y))
+	end
+end
+
+--
+--  Sets the mapping from hex coordinates to world coordinates
+--
+function _M:setHexWorldMapping(x,y, sx, sy)
+	local tile = self._board._map:tile(x, y)
+	self._xoffset = sx - tile.worldX
+	self._yoffset = sy - tile.worldY
+end
+
+--
 --  Draws the component
 --
 function _M:draw()
@@ -75,8 +97,10 @@ function _M:draw()
 			local tile = self._board._map:tile(x,y)
 			
 			if not tile.disabled then				
-				local sx = (self._hexNarrowWidth * x) + self._xoffset
-				local sy = (self._hexHeight * (x * 0.5 + y)) + self._yoffset
+				--(self._hexNarrowWidth * x) + self._xoffset
+				local sx = tile.worldX + self._xoffset 
+				--(self._hexHeight * (x * 0.5 + y)) + self._yoffset
+				local sy = tile.worldY + self._yoffset 
 				
 				if tile.hilighted then 
 					line_color = color.white
@@ -163,7 +187,8 @@ function _M:update(dt)
 		if self._drawingColor and not currentTile.color then
 			currentTile.color = self._drawingColor
 			currentTile.filled = true
-			self._board:checkConnectors(
+			--[[
+			--self._board:checkgames(
 				function(c)
 					self:allTilesOfColor(c.color, function(tile)
 						tile.locked = true
@@ -186,6 +211,7 @@ function _M:update(dt)
 						tile.color = { tile.color[1], tile.color[2], tile.color[3], 64 }							
 					end)
 				end)
+				]]
 		end
 	end	
 

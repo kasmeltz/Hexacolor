@@ -39,8 +39,8 @@ function _M:initialize()
 		self._tiles[y] = {}
 		for x = 1, self._width do
 			self._tiles[y][x] = { 
-				x = x, 
-				y = y
+				tileX = x, 
+				tileY = y
 			}
 		end
 	end
@@ -48,8 +48,8 @@ function _M:initialize()
 	-- create neighbour structure for a tile
 	local function createNeighbours(tile)
 		tile.neighbours = {}
-		local x = tile.x
-		local y = tile.y
+		local x = tile.tileX
+		local y = tile.tileY
 		
 		for i = 1, #self._neighbourMap.y do
 			local n = self:tile(x + self._neighbourMap.x[i],
@@ -101,8 +101,8 @@ end
 --  Returns the distance (in hexes) between two tiles
 --
 function _M:distance(tile1, tile2)
-	local x = tile1.x - tile2.x
-	local y = tile1.y - tile2.y	
+	local x = tile1.tileX - tile2.tileX
+	local y = tile1.tileY - tile2.tileY
 	return (math.abs(x) + math.abs(y) + math.abs(x+y)) / 2
 end
 

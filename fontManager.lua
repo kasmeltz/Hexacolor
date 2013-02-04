@@ -10,11 +10,15 @@ module (...)
 
 local fonts = {}
 
-function Load(name, path, size)
-	if fonts[name .. size] then 
-		return fonts[name .. size]
+--
+--  Returns the font specified by the path
+--	loading it as a new resource if it doesn't already exist
+--
+function load(path, size)
+	if fonts[path .. size] then 
+		return fonts[path .. size]
 	end
 	
-	fonts[name .. size] = love.graphics.newFont(path, size)
-	return fonts[name .. size] 
+	fonts[path .. size] = love.graphics.newFont(path, size)
+	return fonts[path .. size] 
 end
