@@ -1,6 +1,7 @@
 local imageManager = require 'imageManager'
 local fontManager = require 'fontManager'
 local sceneManager = require 'gameSceneManager'
+local inputManager = require 'gameInputManager'
 local gameScene = require 'gameScene'
 
 local hexgamecomponent = require 'hexgamecomponent'
@@ -15,7 +16,7 @@ local previousTile
 function love.load()
 	math.randomseed(os.time())
 	
-	local board = hexgameboard:new(18, 23, 7)
+	local board = hexgameboard:new(18, 23, 9)
 		
 	for tile in board._map:tiles() do
 		if not tile.disabled then 
@@ -35,8 +36,8 @@ function love.load()
 	tile.goal = true
 	
 	local hgc = hexgamecomponent:new(board)
-	hgc:hexagonScale(50,40)
-	hgc:setHexScreenMapping(18, 23, 380, 280)
+	hgc:hexagonScale(35,25)
+	hgc:setHexScreenMapping(18, 23, 380, 220)
 	hgc._drawOrder = 0
 		
 	local gs = gameScene:new()	
@@ -47,6 +48,7 @@ function love.load()
 	gameScene:camera(c)	
 	
 	gs:addComponent(hgc)
+	hgc:loadSpells()
 	
 	sceneManager.removeScene('hexagons')
 	sceneManager.addScene('hexagons', gs)
@@ -58,6 +60,7 @@ function love.draw()
 	sceneManager.draw()
 end
 
-function love.update(dt)
+function love.update(dt)	
+	inputManager.update()
 	sceneManager.update(dt)
 end

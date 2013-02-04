@@ -5,6 +5,8 @@ January 9th, 2013
 
 ]]
 
+local love = love
+
 module (...)
 
 local scenes = {}
