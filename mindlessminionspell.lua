@@ -137,7 +137,7 @@ function MindlessMinionSpell:selectSecondTile(tile)
 	
 	local a = PathedActor{ 
 		_speed = 20,
-		_path = self._path, 
+		_path = table.clone(self._path),
 		_spriteSheet = spriteSheetManager.sheet('male_body_light'),
 		_tileOffset = { self._hgc._hexWideWidth / 2, self._hgc._hexHeight * 0.75 }
 	}
